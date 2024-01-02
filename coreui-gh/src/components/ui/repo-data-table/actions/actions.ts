@@ -1,21 +1,16 @@
-// updateTaskPriority,
-// updateTaskStatus,
-// deleteTask,
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import NextCors from 'nextjs-cors';
 import { mockAsyncTimeout } from '@/helpers/index';
 import { FetchTableDataPayload, FetchTableDataResponse } from '@/components/ui/data-table/hooks/use-data-table';
-import { Task } from '../task-data-schema';
-import { STORE } from './mockTaskData';
+import { Repo } from '../table-data-schema';
+import { STORE } from './mockRepoData';
 
-export interface GetTasksRequest extends FetchTableDataPayload { }
+export interface GetReposRequest extends FetchTableDataPayload { }
 
-export const getTasks = async (request: GetTasksRequest): Promise<FetchTableDataResponse<Task>> => {
-    console.log('request', request);
+export const getRepos = async (request: GetReposRequest): Promise<FetchTableDataResponse<Repo>> => {
     const pageSize = request.pageSize || 10;
-    const page = request.pageIndex || 1;
-    let tableData = STORE.slice((page - 1) * pageSize, page * pageSize)
+    const pageIndex = request.pageIndex || 0;
+    let tableData = STORE.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)
     if (request.searchCriteriaList && request.searchCriteriaList.length > 0) {
         tableData = STORE.slice(0, 5);
     }
@@ -23,7 +18,7 @@ export const getTasks = async (request: GetTasksRequest): Promise<FetchTableData
         tableData = tableData.reverse();
     }
 
-    const data: FetchTableDataResponse<Task> = {
+    const data: FetchTableDataResponse<Repo> = {
         data: tableData,
         pageCount: STORE.length / pageSize,
     }
@@ -33,7 +28,7 @@ export const getTasks = async (request: GetTasksRequest): Promise<FetchTableData
 
 export default async (
     req: NextApiRequest,
-    res: NextApiResponse<FetchTableDataResponse<Task> | { error: string }>
+    res: NextApiResponse<FetchTableDataResponse<Repo> | { error: string }>
 ) => {
     await NextCors(req, res, {
         methods: ['POST'],
@@ -45,11 +40,11 @@ export default async (
         optionsSuccessStatus: 200,
     });
 
-    const request: GetTasksRequest = {
+    const request: GetReposRequest = {
         pageIndex: req.body.pageIndex,
         pageSize: req.body.pageSize,
     }
 
-    const resp = await getTasks(request);
+    const resp = await getRepos(request);
     res.status(200).json(resp);
 };

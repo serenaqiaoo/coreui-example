@@ -18,6 +18,7 @@ import {
     type VisibilityState,
 } from "@tanstack/react-table"
 import { useDebounce } from "@/hooks/use-debounce"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export interface SearchCriteriaForColumn {
     columnName: string; // For column "title",
@@ -78,6 +79,8 @@ export function useDataTable<TData, TValue>({
     const [filterCriteriaList, setFilterCriteriaList] = React.useState<FilterCriteriaForColumn[]>([])
     const [data, setData] = React.useState<TData[]>([])
     const [pageCount, setPageCount] = React.useState<number>();
+    const [isLoadingData, setIsLoadingData] = React.useState<boolean>(false);
+    const [tableColumns, setTableColumns] = React.useState<ColumnDef<TData, any>[]>(columns);
 
     // Handle server-side pagination
     const [{ pageIndex, pageSize }, setPagination] =
@@ -200,8 +203,10 @@ export function useDataTable<TData, TValue>({
 
     // Refetch data based on status changes (including pagination, search, filter, sort)
     React.useEffect(() => {
+        console.log('pageIndex', pageIndex);
         const fetchData = async () => {
             console.log('Fetching table data...');
+            setIsLoadingData(true);
             const response = await fetchTableData({
                 pageIndex: pageIndex,
                 pageSize: pageSize,
@@ -211,14 +216,26 @@ export function useDataTable<TData, TValue>({
             });
             setData(response.data);
             setPageCount(response.pageCount);
+            setIsLoadingData(false);
         }
         fetchData()
     }, [pageIndex, pageSize, sorting, searchCriteriaList, filterCriteriaList])
 
+    // Render skeleton while loading data
+    React.useEffect(() => {
+        if (isLoadingData)
+            setTableColumns(columns.map((column) => ({
+                ...column,
+                Cell: <Skeleton />,
+            })))
+        else setTableColumns(columns)
+    }, [isLoadingData])
+
+
 
     const dataTable = useReactTable({
         data,
-        columns,
+        columns: tableColumns,
         pageCount: pageCount ?? -1,
         state: {
             pagination,
@@ -244,5 +261,5 @@ export function useDataTable<TData, TValue>({
         manualFiltering: true,
     })
 
-    return { dataTable }
+    return { dataTable, isLoadingData }
 }
