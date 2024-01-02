@@ -22,6 +22,8 @@ import { DataTableAdvancedToolbar } from "./advanced/data-table-advanced-toolbar
 import { DataTableFloatingBar } from "./data-table-floating-bar"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
+import { DataTableSkeleton } from "./data-table-skeleton"
+import { DataTableRowsSkeleton } from "./data-table-rows-skeleton"
 
 interface DataTableProps<TData, TValue> {
   dataTable: TanstackTable<TData>
@@ -31,6 +33,7 @@ interface DataTableProps<TData, TValue> {
   advancedFilter?: boolean
   floatingBarContent?: React.ReactNode | null
   deleteRowsAction?: React.MouseEventHandler<HTMLButtonElement>
+  isLoadingData?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -41,7 +44,10 @@ export function DataTable<TData, TValue>({
   advancedFilter = false,
   floatingBarContent,
   deleteRowsAction,
+  isLoadingData = false,
 }: DataTableProps<TData, TValue>) {
+  console.log('isLoadingData', isLoadingData);
+  // if (isLoadingData) return <DataTableSkeleton columnCount={4} filterableColumnCount={filterableColumns.length} />
   return (
     <div className="w-full space-y-2.5 overflow-auto">
       {advancedFilter ? (
@@ -79,7 +85,8 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {dataTable.getRowModel().rows?.length ? (
+            {isLoadingData && <DataTableRowsSkeleton columnCount={columns.length} rowCount={dataTable.getPaginationRowModel().rows.length} />}
+            {!isLoadingData && dataTable.getRowModel().rows?.length ? (
               dataTable.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -95,7 +102,7 @@ export function DataTable<TData, TValue>({
                   ))}
                 </TableRow>
               ))
-            ) : (
+            ) : !isLoadingData && (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
