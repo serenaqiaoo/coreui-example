@@ -1,12 +1,31 @@
-import * as React from "react"
+import React, { useCallback, ChangeEvent } from 'react';
+import noop from 'lodash/noop';
 
 import { cn } from "@/lib/utils"
 
 export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  trim?: boolean;
+  onValueChange?: React.Dispatch<React.SetStateAction<string>>;
+}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
+  ({
+    className,
+    trim = false,
+    onValueChange = noop,
+    ...props
+  }, ref) => {
+
+    const handleChange = useCallback(
+      (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        let inputValue = e.target.value;
+        if (inputValue && trim) inputValue = inputValue.trim();
+        onValueChange(inputValue);
+      },
+      [onValueChange],
+    );
+
     return (
       <textarea
         className={cn(
@@ -14,6 +33,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className
         )}
         ref={ref}
+        onChange={handleChange}
         {...props}
       />
     )

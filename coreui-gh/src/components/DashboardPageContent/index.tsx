@@ -9,13 +9,15 @@ import { Separator } from '../ui/separator';
 import { ProcessIndexRequest } from '@/pages/api/process-index';
 import axios from 'axios';
 import { Progress } from "@/components/ui/progress";
+import { Shell } from '../ui/shell';
 
 export const DashbaordPageContent: React.FC = () => {
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
+    const [startDate, setStartDate] = useState<Date>();
+    const [endDate, setEndDate] = useState<Date>();
     const [indexed, setIndexed] = useState(false);
     const [isIndexing, setIsIndexing] = useState(false);
     const [progress, setProgress] = React.useState(33);
+    const [repoLinks, setRepoLinks] = useState('');
 
     React.useEffect(() => {
         const timer = setTimeout(() => setProgress(66), 2000)
@@ -41,21 +43,28 @@ export const DashbaordPageContent: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-row mb-10 gap-20">
-                <Textarea placeholder="Enter the repo links you are interested in line by line." rows={5} />
-                <div className='grid gap-2'>
-                    <div className="flex flex-row">
-                        <div className='font-bold'>Start Date: </div>
-                        <DatePicker />
-                    </div>
-                    <div className="flex flex-row">
-                        <div className='font-bold'>End Date: </div>
-                        <DatePicker />
-                    </div>
+            <div className="grid grid-rows-3 grid-flow-col gap-4">
+                <div className="row-span-3">
+                    <Textarea
+                        placeholder="Enter the repo links you are interested in line by line."
+                        rows={5}
+                        onValueChange={setRepoLinks}
+                    />
+                </div>
+                <div className="col-span-1">
+                    <DatePicker placeholder='Select start date' onDateChange={setStartDate} />
+                </div>
+                <div className="row-span-1 col-span-1">
+                    <DatePicker placeholder='Select end date' onDateChange={setEndDate} />
                 </div>
             </div>
 
-            <Button className='mb-10' onClick={() => indexData({ repoLinks: '', startDate: 0, endDate: 0 })} disabled={isIndexing}>Fetch relevant repos</Button>
+            <Button
+                className='mb-10'
+                onClick={() => indexData({ repoLinks: repoLinks, startDate: startDate?.getTime() || -1, endDate: endDate?.getTime() || -1 })}
+                disabled={isIndexing}>
+                Fetch relevant repos
+            </Button>
 
             {isIndexing && <Progress value={progress} />}
 
@@ -63,12 +72,12 @@ export const DashbaordPageContent: React.FC = () => {
             {indexed && !isIndexing && (<><Separator className="my-6" />
                 <div className="space-y-5 mt-5">
                     <h2 className="text-xl font-bold tracking-tight">Relevant Repos</h2>
-                    <RepoDataTable />
+                    <Shell><RepoDataTable /></Shell>
                 </div>
                 <Separator className="my-6" />
                 <div className="space-y-5 mt-5">
                     <h2 className="text-xl font-bold tracking-tight">Potential Stargazers</h2>
-                    <UserDataTable />
+                    <Shell><UserDataTable /></Shell>
                 </div></>)}
         </div>
     );
